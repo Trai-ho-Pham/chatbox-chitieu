@@ -123,19 +123,38 @@
         }
 
         function saveToGoogleSheets(item, amount) {
-            const date = new Date().toLocaleDateString('vi-VN');
-            const data = { date, item, amount };
+    const date = new Date().toLocaleDateString('vi-VN');
+    const data = { date, item, amount };
 
-            fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbwT80iYJfWV5p53FyY4Y5yJtq13XnPRY4Y6Q75SFSA2IJ388m44ebzbT1bsbWUOIRumNw/exec', {
-                method: 'POST',
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(response => response.json())
-            .then(result => console.log('Đã gửi:', result))
-            .catch(error => console.error('Lỗi:', error));
+    fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbwT80iYJfWV5p53FyY4Y5yJtq13XnPRY4Y6Q75SFSA2IJ388m44ebzbT1bsbWUOIRumNw/exec', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text(); // Lấy text thay vì parse JSON ngay
         }
+        return response.json();
+    })
+    .then(result => {
+        if (typeof result === 'string') { // Nếu là HTML/error
+            throw new Error('Lỗi server: ' + result.substring(0, 100)); // Cắt ngắn để tránh quá dài
+        }
+        console.log('Đã gửi:', result);
+        const reply = document.createElement('div');
+        reply.className = 'message';
+        reply.textContent = `Đã lưu: ${item} - ${amount} đồng`;
+        chatBody.appendChild(reply);
+    })
+    .catch(error => {
+        console.error('Lỗi:', error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'message';
+        errorMsg.textContent = `Lỗi: ${error.message}`;
+        chatBody.appendChild(errorMsg);
+    });
+}
 
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
